@@ -54,11 +54,6 @@ public class Application {
                         searcher.search(field, out);
                         break;
 
-                    case "optimize":
-                        Optimizer optimizer = new Optimizer(indexDirectory, analyzer);
-                        optimizer.optimize();
-                        break;
-
                     default:
                         String info = "Unknown function: " + args[0];
                         out.println(info);
