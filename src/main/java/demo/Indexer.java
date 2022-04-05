@@ -67,15 +67,17 @@ class Indexer {
             System.out.println(info);
 
             try (InputStream is = Indexer.class.getResourceAsStream("tika-config-template.xml")) {
-                tikaConfigFile.createNewFile();
+                if (null != is) {
+                    tikaConfigFile.createNewFile();
 
-                try (FileOutputStream os = new FileOutputStream(tikaConfigFile)) {
-                    byte[] buffer = new byte[1024];
-                    int bytesRead;
-                    while ((bytesRead = is.read(buffer)) != -1) {
-                        os.write(buffer, 0, bytesRead);
+                    try (FileOutputStream os = new FileOutputStream(tikaConfigFile)) {
+                        byte[] buffer = new byte[1024];
+                        int bytesRead;
+                        while ((bytesRead = is.read(buffer)) != -1) {
+                            os.write(buffer, 0, bytesRead);
+                        }
+                    } catch (FileNotFoundException ignore) {
                     }
-                } catch (FileNotFoundException ignore) {
                 }
             }
             catch (IOException ignore) {

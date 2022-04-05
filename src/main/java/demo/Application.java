@@ -22,7 +22,7 @@ public class Application {
 
         try {
             // Setup Lucene index location
-            Path indexPath = Paths.get(System.getProperty("user.dir"), "index");
+            Path indexPath = Paths.get(System.getProperty("user.dir"), "=index=");
             Directory indexDirectory = new NIOFSDirectory(indexPath);
 
             // Assume swedish language resources (mainly)
