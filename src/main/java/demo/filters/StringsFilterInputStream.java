@@ -3,7 +3,9 @@ package demo.filters;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import java.io.*;
+import java.io.FilterInputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.nio.CharBuffer;
 
 public class StringsFilterInputStream extends FilterInputStream {

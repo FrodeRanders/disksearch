@@ -8,7 +8,6 @@ import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.NIOFSDirectory;
 
 import java.io.File;
-import java.io.IOException;
 import java.io.PrintWriter;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -30,11 +29,28 @@ public class Application {
 
             if (args.length > 0) {
                 switch (args[0]) {
+                    case "convert":
+                        if (args.length > 1) {
+                            File tikaConfigFile = new File("tika-config.xml");
+                            if (Scanner.prepare(tikaConfigFile)) {
+                                Scanner scanner = new Scanner(tikaConfigFile);
+                                Converter converter = new Converter(scanner);
+                                File sourceDirectory = new File(args[1]);
+                                converter.convertDirectory(sourceDirectory, out);
+                            }
+                        }
+                        else {
+                            String info = "You need to provide path to directory";
+                            out.println(info);
+                        }
+                        break;
+
                     case "index":
                         if (args.length > 1) {
                             File tikaConfigFile = new File("tika-config.xml");
-                            if (Indexer.prepare(tikaConfigFile)) {
-                                Indexer indexer = new Indexer(indexDirectory, analyzer, tikaConfigFile);
+                            if (Scanner.prepare(tikaConfigFile)) {
+                                Scanner scanner = new Scanner(tikaConfigFile);
+                                Indexer indexer = new Indexer(indexDirectory, analyzer, scanner);
                                 File sourceDirectory = new File(args[1]);
                                 indexer.indexDirectory(sourceDirectory, out);
                             }
@@ -60,7 +76,7 @@ public class Application {
                 }
             }
             else {
-                String info = "usage: index <directory> | search [filename|path|content-type|content]";
+                String info = "usage: index <directory> | convert <directory> | search [filename|path|content-type|content]";
                 out.println(info);
             }
         } catch (Exception e) {
