@@ -27,7 +27,8 @@ public class Converter {
             final Long[] fileCount = {0L};
             fileCount[0] += scanner.scanDirectory(
                     directoryToConvert, observedContentTypes,
-                    (path, contentType, major, minor, charset, reader) -> {
+                    /* per directory */ () -> { /* ignore */ },
+                    /* per file */ (path, contentType, major, minor, charset, reader) -> {
                         String filename = path.getFileName().toString();
 
                         switch (major) {

@@ -23,22 +23,17 @@ import java.util.regex.Pattern;
 
 
 class Scanner {
-    private static Logger log = LogManager.getLogger(Scanner.class);
-
     private static final String DEFAULT_SOURCE_CHARACTER_ENCODING = "ISO-8859-1";
-
     private static final String CONTENT_TYPE_RE = "((?:[a-z][a-z0-9_]*))\\/((?:[a-z][a-z0-9_]*))((;.*?(charset)=((?:[a-z][a-z0-9_\\-]+)))*)";
     private static final Pattern contentTypePattern = Pattern.compile(CONTENT_TYPE_RE, Pattern.CASE_INSENSITIVE | Pattern.DOTALL);
-
-    public interface ScanRunnable {
-        boolean run(Path path, String contentType, String major, String minor, String charset, Reader reader) throws IOException;
-    }
-
+    private static Logger log = LogManager.getLogger(Scanner.class);
     private final Parser parser;
+    private final String nameOfIndexDirectory;
 
-    Scanner(File tikaConfigFile) throws Exception {
+    Scanner(File tikaConfigFile, final String nameOfIndexDirectory) throws Exception {
         TikaConfig config = new TikaConfig(tikaConfigFile);
         // Detector detector = config.getDetector();
+        this.nameOfIndexDirectory = nameOfIndexDirectory;
 
         parser = new AutoDetectParser(config);
     }
@@ -46,6 +41,7 @@ class Scanner {
     /**
      * Prepares configuration.
      * <p/>
+     *
      * @return true if configuration did exist and we may continue
      */
     public static boolean prepare(File tikaConfigFile) {
@@ -68,8 +64,7 @@ class Scanner {
                     } catch (FileNotFoundException ignore) {
                     }
                 }
-            }
-            catch (IOException ignore) {
+            } catch (IOException ignore) {
             }
 
             info = "Please refer to and adjust the configuration file and then run again:\n" + tikaConfigFile;
@@ -79,7 +74,6 @@ class Scanner {
         }
         return true; // Configuration existed
     }
-
 
     private Reader getReader(InputStream inputStream, Metadata metadata) throws IOException, TikaException, SAXException {
         ParseContext context = new ParseContext();
@@ -95,10 +89,10 @@ class Scanner {
     }
 
     private boolean scanFile(
-          File file,
-          Set<String> observedContentTypes,
-          final ScanRunnable runnable
-          ) throws IOException {
+            File file,
+            Set<String> observedContentTypes,
+            final ScanPerFileRunnable runnable
+    ) throws IOException {
 
         final Path path = file.toPath();
         try (InputStream is = Files.newInputStream(path)) {
@@ -127,27 +121,24 @@ class Scanner {
 
                 return runnable.run(path, _contentType, major, minor, charset, reader);
             }
-        }
-        catch (TikaException tikae) {
+        } catch (TikaException tikae) {
             String info = "TIKA could not process file \"" + file.getAbsolutePath() + "\": " + tikae.getMessage();
             log.info(info);
-        }
-        catch (SAXException saxe) {
+        } catch (SAXException saxe) {
             String info = "Parse error: " + saxe.getMessage();
             log.warn(info);
-        }
-        catch (Throwable t) {
+        } catch (Throwable t) {
             String info = "Failed to index file \"" + file.getAbsolutePath() + "\":  " + t.getMessage();
             log.info(info);
         }
         return false;
     }
 
-
     public long scanDirectory(
             File directoryToIndex,
             Set<String> observedContentTypes,
-            final ScanRunnable runnable
+            final ScanPerDirectoryRunnable perDirectoryRunnable,
+            final ScanPerFileRunnable perFileRunnable
     ) throws IOException {
 
         long fileCount = 0L;
@@ -158,20 +149,35 @@ class Scanner {
                 if (entry.isFile() && entry.canRead() && entry.length() > 0
                 ) {
                     try {
-                        if (scanFile(entry, observedContentTypes, runnable)) {
+                        if (scanFile(entry, observedContentTypes, perFileRunnable)) {
                             fileCount++;
                         }
                     } catch (IOException ioe) {
                         String info = "Failed to rollback index: " + ioe.getMessage();
                         log.warn(info);
                     }
-                }
-                else if (entry.isDirectory()) {
-                    fileCount += scanDirectory(entry, observedContentTypes, runnable);
+                } else if (entry.isDirectory()) {
+                    if (nameOfIndexDirectory.equals(entry.getName())) {
+                        log.info("Ignoring index database: " + nameOfIndexDirectory);
+                    } else {
+                        fileCount += scanDirectory(entry, observedContentTypes, perDirectoryRunnable, perFileRunnable);
+                        perDirectoryRunnable.run();
+                    }
                 }
             }
+        } catch (java.nio.file.FileSystemException fse) {
+            String info = "Failed to scan directory: " + fse.getMessage();
+            log.warn(info, fse);
         }
 
         return fileCount;
+    }
+
+    public interface ScanPerDirectoryRunnable {
+        void run() throws IOException;
+    }
+
+    public interface ScanPerFileRunnable {
+        boolean run(Path path, String contentType, String major, String minor, String charset, Reader reader) throws IOException;
     }
 }

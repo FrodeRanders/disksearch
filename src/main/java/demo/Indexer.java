@@ -15,7 +15,6 @@ import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.*;
-import java.util.regex.Pattern;
 
 
 class Indexer {
@@ -44,7 +43,8 @@ class Indexer {
             try (IndexWriter indexWriter = new IndexWriter(indexDirectory, indexerConfig)) {
                 fileCount[0] += scanner.scanDirectory(
                         directoryToIndex, observedContentTypes,
-                        (path, contentType, major, minor, charset, reader) -> {
+                        /* per directory */ indexWriter::flush,
+                        /* per file */ (path, contentType, major, minor, charset, reader) -> {
                             String filename = path.getFileName().toString();
                             String absolutePath = path.toAbsolutePath().toString();
 
@@ -79,7 +79,8 @@ class Indexer {
                             return true;
                         });
 
-                indexWriter.flush();
+                out.println();
+                out.println("Committing to database...");
                 indexWriter.commit();
 
                 //

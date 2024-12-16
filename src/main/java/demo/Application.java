@@ -15,13 +15,15 @@ import java.nio.file.Paths;
 public class Application {
     private static Logger log = LogManager.getLogger(Application.class);
 
+    public static final String INDEX_NAME = "=index=";
+
     public static void main(String[] args) {
 
         PrintWriter out = new PrintWriter(System.out);
 
         try {
             // Setup Lucene index location
-            Path indexPath = Paths.get(System.getProperty("user.dir"), "=index=");
+            Path indexPath = Paths.get(System.getProperty("user.dir"), INDEX_NAME);
             Directory indexDirectory = new NIOFSDirectory(indexPath);
 
             // Assume swedish language resources (mainly)
@@ -33,13 +35,12 @@ public class Application {
                         if (args.length > 1) {
                             File tikaConfigFile = new File("tika-config.xml");
                             if (Scanner.prepare(tikaConfigFile)) {
-                                Scanner scanner = new Scanner(tikaConfigFile);
+                                Scanner scanner = new Scanner(tikaConfigFile, INDEX_NAME);
                                 Converter converter = new Converter(scanner);
                                 File sourceDirectory = new File(args[1]);
                                 converter.convertDirectory(sourceDirectory, out);
                             }
-                        }
-                        else {
+                        } else {
                             String info = "You need to provide path to directory";
                             out.println(info);
                         }
@@ -49,13 +50,12 @@ public class Application {
                         if (args.length > 1) {
                             File tikaConfigFile = new File("tika-config.xml");
                             if (Scanner.prepare(tikaConfigFile)) {
-                                Scanner scanner = new Scanner(tikaConfigFile);
+                                Scanner scanner = new Scanner(tikaConfigFile, INDEX_NAME);
                                 Indexer indexer = new Indexer(indexDirectory, analyzer, scanner);
                                 File sourceDirectory = new File(args[1]);
                                 indexer.indexDirectory(sourceDirectory, out);
                             }
-                        }
-                        else {
+                        } else {
                             String info = "You need to provide path to directory";
                             out.println(info);
                         }
@@ -74,8 +74,7 @@ public class Application {
                         String info = "Unknown function: " + args[0];
                         out.println(info);
                 }
-            }
-            else {
+            } else {
                 String info = "usage: index <directory> | convert <directory> | search [filename|path|content-type|content]";
                 out.println(info);
             }

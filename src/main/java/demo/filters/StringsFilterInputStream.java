@@ -9,14 +9,10 @@ import java.io.InputStream;
 import java.nio.CharBuffer;
 
 public class StringsFilterInputStream extends FilterInputStream {
-    private static final Logger log = LogManager.getLogger(StringsFilterInputStream.class);
-
-    private static final int EOF = -1;
     static final char SPACE = (char) 32;
-
     static final char[] BYTE_MAP = {
             SPACE, SPACE, SPACE, SPACE, SPACE, SPACE, SPACE, SPACE, SPACE, SPACE, //  0 -  9
-            SPACE, SPACE, SPACE, SPACE,	SPACE, SPACE, SPACE, SPACE, SPACE, SPACE, // 10 - 19
+            SPACE, SPACE, SPACE, SPACE, SPACE, SPACE, SPACE, SPACE, SPACE, SPACE, // 10 - 19
             SPACE, SPACE, SPACE, SPACE, SPACE, SPACE, SPACE, SPACE, SPACE, SPACE, // 20 - 29
             SPACE, SPACE, SPACE,                                                  // 30 - 32
             // ! " # $ % & ' ( ) *
@@ -66,7 +62,8 @@ public class StringsFilterInputStream extends FilterInputStream {
             // .. ü ..
             SPACE, SPACE, SPACE, '\u00FC', SPACE, SPACE, SPACE                     // 249 - 255
     };
-
+    private static final Logger log = LogManager.getLogger(StringsFilterInputStream.class);
+    private static final int EOF = -1;
     // Parameters
     private int longestToken;
     private int shortestToken;
@@ -136,7 +133,7 @@ public class StringsFilterInputStream extends FilterInputStream {
                 }
 
                 // Map read byte (if possible)
-                char mappedByte =  map.get(b);
+                char mappedByte = map.get(b);
 
                 if (buffer.position() > longestToken) {
                     // We have an additional character (interesting or not) which will

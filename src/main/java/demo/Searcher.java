@@ -46,8 +46,7 @@ class Searcher {
                     if (debug) {
                         out.println("debug off");
                         debug = false;
-                    }
-                    else {
+                    } else {
                         out.println("debug on");
                         debug = true;
                     }
@@ -60,13 +59,12 @@ class Searcher {
                     Query query;
                     if ("content".equals(field)) {
                         query = contentQueryParser.parse(input);
-                    }
-                    else {
+                    } else {
                         query = new TermQuery(new Term(field, input));
                     }
                     out.println("Searching for: " + query.toString(field));
 
-                    out.println("" + searcher.count(query) + " matching documents");
+                    out.println(searcher.count(query) + " matching documents");
                     out.flush();
 
                     ScoreDoc[] hits = searcher.search(query, 100).scoreDocs;
@@ -82,8 +80,7 @@ class Searcher {
                     }
                 }
             } while (oneMoreTime);
-        }
-        catch (ParseException pe) {
+        } catch (ParseException pe) {
             String info = "Failed to parse query: " + pe.getMessage();
             pe.printStackTrace(System.out);
             out.println(info);
